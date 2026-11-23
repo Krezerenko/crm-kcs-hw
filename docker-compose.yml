@@ -1,6 +1,6 @@
 services:
   bookstack:
-    image: lscr.io/linuxserver/bookstack:latest
+    image: lscr.io/linuxserver/bookstack:version-v25.07.2
     environment:
       - PUID=1000
       - PGID=1000
@@ -12,12 +12,14 @@ services:
       - DB_USERNAME=bookstack
       - DB_PASSWORD=bookstack
       - DB_DATABASE=bookstackapp
+#      - APP_DEBUG=true
     volumes:
-      - ./bookstack_config:/config
+      - bookstack_data:/config
     ports:
       - "6875:80"
     depends_on:
-      - bookstack_db
+      bookstack_db:
+        condition: service_healthy
 
   bookstack_db:
     image: lscr.io/linuxserver/mariadb:latest
@@ -30,4 +32,11 @@ services:
       - MYSQL_USER=bookstack
       - MYSQL_PASSWORD=bookstack
     volumes:
-      - ./bookstack_db:/config
+      - db_data:/config
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      retries: 20
+volumes:
+  bookstack_data:
+  db_data:
